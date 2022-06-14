@@ -11,4 +11,5 @@ To open the Unity project, follow these steps:
 - Checkout to the "bHaptics-integration" branch;
 - Download the 3D models from Google Drive (link above);
 - Insert the "Assets" folder downloaded in "Virtual-Metro-Scenario-for-Mental-Health-Rehabilitation", repository cloned folder;
-- Open the project on Unity Hub.
+- Open the project on Unity Hub;
+- Open the Station scene.
