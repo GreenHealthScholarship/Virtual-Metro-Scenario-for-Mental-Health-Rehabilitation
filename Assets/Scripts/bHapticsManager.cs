@@ -17,7 +17,7 @@ namespace Bhaptics.Tact.Unity
         }
         private void OnTriggerEnter(Collider other) {
             //Debug.Log(gameObject.transform.parent.transform.parent.name + gameObject.transform.parent.name + gameObject.name);
-            if(other.gameObject.tag == "NPC" && !clip.IsPlaying()){
+            if(other.gameObject.tag == "NPC" || other.gameObject.tag == "Wall"){
                 Play();
             }
         }
@@ -40,7 +40,7 @@ namespace Bhaptics.Tact.Unity
             //intensity, duration, AngleX, OffsetY
             clip.Play(1f, 1f, 0f, 0f, "" + side + gameObject.transform.parent.name + gameObject.name);
             yield return new WaitForSecondsRealtime(.9f);
-            Debug.Log("Aqui");
+            //Debug.Log("Aqui");
             
             if(activated) yield return PlayCoroutine();
             else yield return null;

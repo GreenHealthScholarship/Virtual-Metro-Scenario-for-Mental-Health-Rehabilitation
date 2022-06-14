@@ -174,7 +174,7 @@ namespace Bhaptics.Tact.Unity
         public virtual void Stop(string identifier)
         {
             var haptic = BhapticsManager.GetHaptic();
-            Debug.Log(identifier);
+            //Debug.Log(identifier);
 
             if (haptic != null)
             {
