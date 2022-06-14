@@ -58,3 +58,8 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
+# 3D models that will be on Google Drive - https://drive.google.com/drive/folders/10EBCJ_iScMJCi0OZgKSTI0010JRHJEpu?usp=sharing
+/[Aa]ssets/Blender/*
+/[Aa]ssets/Characters/*
+/[Aa]ssets/ExampleAssets/*
+/[Aa]ssets/XR/*
