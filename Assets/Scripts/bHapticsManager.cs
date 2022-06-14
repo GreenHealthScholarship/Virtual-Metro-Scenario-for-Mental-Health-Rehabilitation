@@ -15,11 +15,9 @@ namespace Bhaptics.Tact.Unity
 
             clip = Resources.Load<HapticClip>("All Colliders/" + side + gameObject.transform.parent.name + gameObject.name);
         }
+
         private void OnTriggerEnter(Collider other) {
-            //Debug.Log(gameObject.transform.parent.transform.parent.name + gameObject.transform.parent.name + gameObject.name);
-            if(other.gameObject.tag == "NPC" || other.gameObject.tag == "Wall"){
-                Play();
-            }
+            if(other.CompareTag("NPC") || other.CompareTag("Wall")) Play();
         }
 
         private void OnTriggerExit(Collider other) {
@@ -33,14 +31,14 @@ namespace Bhaptics.Tact.Unity
 
         private void Stop(){
             activated = false;
+            //Debug.Log("parou - " + side + gameObject.transform.parent.name + gameObject.name);
             clip.Stop("" + side + gameObject.transform.parent.name + gameObject.name);
         }
 
         private IEnumerator PlayCoroutine(){
             //intensity, duration, AngleX, OffsetY
-            clip.Play(1f, 1f, 0f, 0f, "" + side + gameObject.transform.parent.name + gameObject.name);
+            clip.Play(.5f, 1f, 0f, 0f, "" + side + gameObject.transform.parent.name + gameObject.name);
             yield return new WaitForSecondsRealtime(.9f);
-            //Debug.Log("Aqui");
             
             if(activated) yield return PlayCoroutine();
             else yield return null;

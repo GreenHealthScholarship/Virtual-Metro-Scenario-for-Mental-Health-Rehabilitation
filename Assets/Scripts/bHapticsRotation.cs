@@ -8,7 +8,4 @@ public class bHapticsRotation : MonoBehaviour{
         transform.eulerAngles = new Vector3(transform.eulerAngles.x, Camera.transform.eulerAngles.y-90, transform.eulerAngles.z );
         transform.position = new Vector3(Camera.transform.position.x, transform.position.y, Camera.transform.position.z);
     }
-    public void test(){
-        Debug.Log("TESTE");
-    }
 }
