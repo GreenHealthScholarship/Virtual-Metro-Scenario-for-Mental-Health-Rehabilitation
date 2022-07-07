@@ -1,5 +1,5 @@
 # Virtual-Metro-Scenario-for-Mental-Health-Rehabilitation
-A virtual metro scenario for a serious game that will aid in the treatment of mental illness, specifically schizophrenia.
+A virtual metro testing scenario for development of features that can be implemented in a serious game for aiding in the treatment of mental illness, specifically schizophrenia.
 
 It is for the **Green Health** project that has been carried out by the **Polytechnic Institute of Bragança (IPB)** - Portugal.
 
