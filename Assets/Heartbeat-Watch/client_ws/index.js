@@ -1,5 +1,5 @@
 console.clear();
-console.log("- Iniciando, aguarde...\n\n");
+console.log("- Starting, wait...\n\n");
 
 
 const WebSocket = require("ws");
@@ -17,12 +17,12 @@ let created = 0, insertedIdMongo;
 
 
 client.connect(err => {
-  console.log("- Conexão com banco iniciada. Por favor, inicie o relógio.");
+  console.log("- The bank connection was established. Please, start the watch.");
   
 
   wss.on("connection", ws => {
-    if(created == 0) console.log("- Cliente relógio connectado.");
-    else console.log("\n\n- Cliente relógio reconnectado.");
+    if(created == 0) console.log("- Watch client connected.");
+    else console.log("\n\n- Watch client reconnected.");
     
 
     ws.on("message", data => {
@@ -36,9 +36,9 @@ client.connect(err => {
 
       if(created == 1){
         if (pieces[0] === "heartRate") {
-          console.log("Taxa de batimento cardíaco: " + pieces[1]);
+          console.log("Heartbeat rate: " + pieces[1]);
           changeCollection("updateHeartRate", parseInt(pieces[1]));
-        } else console.log("\n- Não foi para o banco -> " + pieces[0] + ":" + pieces[1] + ".\n");
+        } else console.log("\n- This did not go to the bank -> " + pieces[0] + ":" + pieces[1] + ".\n");
       }
     });
 
@@ -78,8 +78,8 @@ client.connect(err => {
             heartRateInformation: []
           }).then(function (result) {
             insertedIdMongo = result.insertedId.id;
-            console.log("\n\n- Recebendo informações para o usuário: " + userName + ".");
-            console.log("Hora de início:" + date_ob.getHours() + ":" + date_ob.getMinutes() + ":" + date_ob.getSeconds() + ".\n");
+            console.log("\n\n- Receiving information for the user: " + userName + ".");
+            console.log("Starting time:" + date_ob.getHours() + ":" + date_ob.getMinutes() + ":" + date_ob.getSeconds() + ".\n");
 
             created = 1;
           });
@@ -103,7 +103,7 @@ client.connect(err => {
                 }
                 
                 let time = new Date(hourgetter[0]);
-                console.log("\n\nHora de término: " + time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds() + ".");
+                console.log("\n\nEnding Time: " + time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds() + ".");
                 created = 2;
               });
           }
