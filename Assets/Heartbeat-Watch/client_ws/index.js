@@ -13,105 +13,77 @@ client.connect(err => {
 
   const wss = new WebSocket.Server({ port: 3476 });
 
-  wss.on("connection", ws => {    
+  wss.on("connection", ws => {
     if(created == 0){
-      let date_ob = new Date();
-      let day = date_ob.getDate(), month = date_ob.getMonth() + 1, year = date_ob.getFullYear();
-      let hour = date_ob.getHours(), minute = date_ob.getMinutes(), second = date_ob.getSeconds();
-
+      console.clear();
       console.log("Cliente connectado");
-      console.log("Horas:" + hour + ":" + minute + ":" + second + "\n");
-      
-      collection.insertOne({
-        date: day + "/" + month + "/" + year,
-        startTime: hour + ":" + minute + ":" + second,
-        finalTime: null,
-        name: null,
-        heartRate:[]
-      }).then(function (result) {
+    }else console.log("\n\nCliente reconnectado");
+    
+    ws.on("message", data => {
+      let information = `${data}`;
+      let pieces = information.split(":"), date_ob = new Date();
+
+      if (pieces[0] === "clientName" && created == 0) {
         created = 1;
-        insertedIdMongo = result.insertedId.id;
-      });
+        
+        console.log("Hora de início:" + date_ob.getHours() + ":" + date_ob.getMinutes() + ":" + date_ob.getSeconds() + "\n");
+        console.log("Nome do usuário: " + pieces[1] + "\n");
+
+        changeCollection("insert", pieces[1]);
+      } else if (pieces[0] === "heartRate") {
+        console.log("Taxa de batimento cardíaco: " + pieces[1]);
+        changeCollection("updateHeartRate", parseInt(pieces[1]));
+      } else console.log("\n - Não foi para o banco -> " + pieces[0] + ":" + pieces[1] + "\n");
+    });
+
+    ws.on("close", data => {
+      changeCollection("updateFinalTime", 1);
+    });
+
+    
+    async function changeCollection(option, value) {
+      let date_ob = new Date();
+
+      switch (option) {
+        case "insert":
+          await collection.insertOne({
+            date: date_ob.toLocaleDateString('pt-PT'),
+            name: value,
+            startTime: date_ob.getHours() + ":" + date_ob.getMinutes() + ":" + date_ob.getSeconds(),
+            finalTime: null,
+            heartRate: []
+          }).then(function (result) {
+            insertedIdMongo = result.insertedId.id;
+          });
+          break;
+
+        case "updateHeartRate":
+          await collection.updateOne({ _id: ObjectId(insertedIdMongo) }, { $push: { heartRate: value } }, {});
+          break;
+
+        case "updateFinalTime":
+          if(value == 2) console.log("\n\nHora de término:" + date_ob.getHours() + ":" + date_ob.getMinutes() + ":" + date_ob.getSeconds() + "\n");
+          await collection.updateOne({ _id: ObjectId(insertedIdMongo) }, { $set: { finalTime: date_ob.getHours() + ":" + date_ob.getMinutes() + ":" + date_ob.getSeconds() } }, {});
+          break;
+
+        default:
+          break;
+      }
     }
     
-
-    ws.on("message", data => {
-      var information = `${data}`;
-      var pieces = information.split(":");
-
-      if(pieces[0] === "clientName"){
-        collection.updateOne({ _id: ObjectId(insertedIdMongo) }, { $set: { name: pieces[1]}}, {});
-        console.log("Nome do usuário: " + pieces[1]);
-      }else if(pieces[0] === "heartRate"){
-        collection.updateOne({ _id: ObjectId(insertedIdMongo) }, { $push: {heartRate: pieces[1]}}, {});
-        console.log("Taxa de batimento cardíaco: " + pieces[1]);
-      }else console.log("Novidade -> " + pieces[0] + ":" + pieces[1]);
-    });
-
-    /*ws.on("close", (data) => {
-      console.log("3");
-      writeStream.on('finish', () => {
-          console.log('wrote all data to file');
-      });
-
-      jsonString += ",\n\t\t\"heartRate\":";
-      jsonString += "[" + heartRateArray + "]";
-      jsonString += "\n\t}";
-      heartRateArray.splice(0, heartRateArray.length)
-
-      console.log("Final -> " + jsonString);
+    process.stdin.resume();//so the program will not close instantly
+    async function exitHandler(options, exitCode) {
+        await changeCollection("updateFinalTime", 2);
       
-      writeStream.write(jsonString);
-      console.log("Cliente Desligado" + "\n\n");
-    });*/
-
-    /*collection.insertOne({
-      item: "canvas",
-      qty: 100,
-      tags: ["cotton"],
-      size: { h: 32.5, w: 38, uom: "cm" }
-    }).then(function(result){
-      console.log(result);
-    });
-    
-    collection.deleteMany({"item":"canvas"})
-    .then(function(result) {
-      // process result
-      console.log(result);
-      client.close();
-    })*/
-
-  });
-
-
-
-
-
-
-
-
-
-
-  /*process.stdin.resume();//so the program will not close instantly
-
-  function exitHandler(options, exitCode) {
-      if (options.cleanup) console.log('clean');
-      if (exitCode || exitCode === 0) console.log(exitCode);
+      /*if (options.cleanup) console.log('clean');
+      if (exitCode || exitCode === 0) console.log(exitCode);*/
       if (options.exit) process.exit();
-      writeStream.write("\n]");
-      writeStream.end();
-  }
+    }
 
-  //do something when app is closing
-  process.on('exit', exitHandler.bind(null,{cleanup:true}));
-
-  //catches ctrl+c event
-  process.on('SIGINT', exitHandler.bind(null, {exit:true}));
-
-  // catches "kill pid" (for example: nodemon restart)
-  process.on('SIGUSR1', exitHandler.bind(null, {exit:true}));
-  process.on('SIGUSR2', exitHandler.bind(null, {exit:true}));
-
-  //catches uncaught exceptions
-  process.on('uncaughtException', exitHandler.bind(null, {exit:true}));*/
+    process.on('exit', exitHandler.bind(null, { cleanup: true })); //do something when app is closing
+    process.on('SIGINT', exitHandler.bind(null, { exit: true })); //catches ctrl+c event
+    process.on('SIGUSR1', exitHandler.bind(null, { exit: true })); // catches "kill pid" (for example: nodemon restart)
+    process.on('SIGUSR2', exitHandler.bind(null, { exit: true })); // catches "kill pid" (for example: nodemon restart)
+    process.on('uncaughtException', exitHandler.bind(null, { exit: true })); //catches uncaught exceptions
+  });
 });
