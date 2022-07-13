@@ -1,23 +1,25 @@
+console.clear();
+console.log("Iniciando, aguarde...\n\n");
+
 const WebSocket = require("ws");
 const fs = require("fs");
-const { Console } = require('console');
+const { Console, time } = require('console');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const uri = "mongodb+srv://GreenHealthScholarship:sHt5JNtsDjwBRGj3@cluster0.ffkxo.mongodb.net/?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+const collection = client.db("Heartbeat-Watch").collection("Test");
+const wss = new WebSocket.Server({ port: 3476 });
+
 let created = 0, insertedIdMongo;
 
 client.connect(err => {
-  const collection = client.db("Heartbeat-Watch").collection("Test");
-
-  const wss = new WebSocket.Server({ port: 3476 });
-
+  console.log("Conexão com banco iniciada. Inicie o relógio.");
+  
   wss.on("connection", ws => {
-    if(created == 0){
-      console.clear();
-      console.log("Cliente connectado");
-    }else console.log("\n\nCliente reconnectado");
+    if(created == 0) console.log("Cliente relógio connectado");
+    else console.log("\n\nCliente relógio reconnectado");
     
     ws.on("message", data => {
       let information = `${data}`;
@@ -47,9 +49,9 @@ client.connect(err => {
       switch (option) {
         case "insert":
           await collection.insertOne({
-            date: date_ob.toLocaleDateString('pt-PT'),
+            date: date_ob,
             name: value,
-            startTime: date_ob.getHours() + ":" + date_ob.getMinutes() + ":" + date_ob.getSeconds(),
+            startTime: date_ob,
             finalTime: null,
             heartRate: []
           }).then(function (result) {
@@ -62,8 +64,21 @@ client.connect(err => {
           break;
 
         case "updateFinalTime":
-          if(value == 2) console.log("\n\nHora de término:" + date_ob.getHours() + ":" + date_ob.getMinutes() + ":" + date_ob.getSeconds() + "\n");
-          await collection.updateOne({ _id: ObjectId(insertedIdMongo) }, { $set: { finalTime: date_ob.getHours() + ":" + date_ob.getMinutes() + ":" + date_ob.getSeconds() } }, {});
+          if(value == 1) collection.updateOne({ _id: ObjectId(insertedIdMongo) }, { $set: { finalTime: date_ob } }, {});
+          else{
+              collection.find({_id: ObjectId(insertedIdMongo) }).project({_id:0, finalTime:1}).toArray(function(err, docs) {
+                let hourgetter = Object.values(docs[0]);
+                
+                if(hourgetter[0] == null){
+                  collection.updateOne({ _id: ObjectId(insertedIdMongo) }, { $set: { finalTime: date_ob } }, {});
+                  hourgetter[0] = date_ob;
+                }
+                
+                let time = new Date(hourgetter[0]);
+                console.log("\n\nHora de término: " + time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds());
+                created = 2;
+              });
+          }
           break;
 
         default:
@@ -73,11 +88,14 @@ client.connect(err => {
     
     process.stdin.resume();//so the program will not close instantly
     async function exitHandler(options, exitCode) {
-        await changeCollection("updateFinalTime", 2);
+      await changeCollection("updateFinalTime", 2);
+      setTimeout(() => {
+        if (options.exit) process.exit();
+      }, 1000);
       
       /*if (options.cleanup) console.log('clean');
       if (exitCode || exitCode === 0) console.log(exitCode);*/
-      if (options.exit) process.exit();
+      
     }
 
     process.on('exit', exitHandler.bind(null, { cleanup: true })); //do something when app is closing
