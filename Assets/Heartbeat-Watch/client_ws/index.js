@@ -1,5 +1,6 @@
 console.clear();
-console.log("Iniciando, aguarde...\n\n");
+console.log("- Iniciando, aguarde...\n\n");
+
 
 const WebSocket = require("ws");
 const fs = require("fs");
@@ -14,29 +15,33 @@ const wss = new WebSocket.Server({ port: 3476 });
 
 let created = 0, insertedIdMongo;
 
+
 client.connect(err => {
-  console.log("Conexão com banco iniciada. Inicie o relógio.");
+  console.log("- Conexão com banco iniciada. Por favor, inicie o relógio.");
   
+
   wss.on("connection", ws => {
-    if(created == 0) console.log("Cliente relógio connectado");
-    else console.log("\n\nCliente relógio reconnectado");
+    if(created == 0) console.log("- Cliente relógio connectado.");
+    else console.log("\n\n- Cliente relógio reconnectado.");
     
+
     ws.on("message", data => {
       let information = `${data}`;
       let pieces = information.split(":"), date_ob = new Date();
 
       if (pieces[0] === "clientName" && created == 0) {
-        created = 1;
-        
-        console.log("Hora de início:" + date_ob.getHours() + ":" + date_ob.getMinutes() + ":" + date_ob.getSeconds() + "\n");
-        console.log("Nome do usuário: " + pieces[1] + "\n");
-
         changeCollection("insert", pieces[1]);
-      } else if (pieces[0] === "heartRate") {
-        console.log("Taxa de batimento cardíaco: " + pieces[1]);
-        changeCollection("updateHeartRate", parseInt(pieces[1]));
-      } else console.log("\n - Não foi para o banco -> " + pieces[0] + ":" + pieces[1] + "\n");
+      }
+
+
+      if(created == 1){
+        if (pieces[0] === "heartRate") {
+          console.log("Taxa de batimento cardíaco: " + pieces[1]);
+          changeCollection("updateHeartRate", parseInt(pieces[1]));
+        } else console.log("\n- Não foi para o banco -> " + pieces[0] + ":" + pieces[1] + ".\n");
+      }
     });
+
 
     ws.on("close", data => {
       changeCollection("updateFinalTime", 1);
@@ -48,20 +53,43 @@ client.connect(err => {
 
       switch (option) {
         case "insert":
+          const readline = require('readline');
+
+          function askQuestion(query) {
+              const rl = readline.createInterface({
+                  input: process.stdin,
+                  output: process.stdout,
+              });
+
+              return new Promise(resolve => rl.question(query, ans => {
+                  rl.close();
+                  resolve(ans);
+              }))
+          }
+
+          const userName = await askQuestion("\n\n- Insira o nome do usuário: ");
+
           await collection.insertOne({
-            date: date_ob,
-            name: value,
+            name: userName,
             startTime: date_ob,
             finalTime: null,
-            heartRate: []
+            highHeartRate: false,
+            lowHeartRate: false,
+            heartRateInformation: []
           }).then(function (result) {
             insertedIdMongo = result.insertedId.id;
+            console.log("\n\n- Recebendo informações para o usuário: " + userName + ".");
+            console.log("Hora de início:" + date_ob.getHours() + ":" + date_ob.getMinutes() + ":" + date_ob.getSeconds() + ".\n");
+
+            created = 1;
           });
           break;
 
+
         case "updateHeartRate":
-          await collection.updateOne({ _id: ObjectId(insertedIdMongo) }, { $push: { heartRate: value } }, {});
+          await collection.updateOne({ _id: ObjectId(insertedIdMongo) }, { $push: {heartRateInformation:{heartRate: value, heartRateTime: date_ob}} }, {});
           break;
+
 
         case "updateFinalTime":
           if(value == 1) collection.updateOne({ _id: ObjectId(insertedIdMongo) }, { $set: { finalTime: date_ob } }, {});
@@ -75,7 +103,7 @@ client.connect(err => {
                 }
                 
                 let time = new Date(hourgetter[0]);
-                console.log("\n\nHora de término: " + time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds());
+                console.log("\n\nHora de término: " + time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds() + ".");
                 created = 2;
               });
           }
@@ -86,16 +114,15 @@ client.connect(err => {
       }
     }
     
+
     process.stdin.resume();//so the program will not close instantly
     async function exitHandler(options, exitCode) {
       await changeCollection("updateFinalTime", 2);
       setTimeout(() => {
+        /*if (options.cleanup) console.log('clean');
+        if (exitCode || exitCode === 0) console.log(exitCode);*/
         if (options.exit) process.exit();
       }, 1000);
-      
-      /*if (options.cleanup) console.log('clean');
-      if (exitCode || exitCode === 0) console.log(exitCode);*/
-      
     }
 
     process.on('exit', exitHandler.bind(null, { cleanup: true })); //do something when app is closing
