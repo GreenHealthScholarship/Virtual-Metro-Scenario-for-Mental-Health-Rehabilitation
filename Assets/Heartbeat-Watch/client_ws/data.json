@@ -1,9 +1,22 @@
-Horas:12:20:29
-clientName:Leo
-heartRate:63
-heartRate:62
-heartRate:60
-heartRate:61
-Horas:12:20:54
-clientName:Leo
-heartRate:62
+[
+	{
+		"Horas":"17:41:38",
+		"clientName":"watch",
+		"heartRate":[88,85,83,79]
+	},
+	{
+		"Horas":"17:42:2",
+		"clientName":"watch",
+		"heartRate":[86,89,91]
+	},
+	{
+		"Horas":"17:42:22",
+		"clientName":"watch",
+		"heartRate":[87,77,78,76]
+	},
+	{
+		"Horas":"17:42:42",
+		"clientName":"watch",
+		"heartRate":[70,64,63,61]
+	}
+]
